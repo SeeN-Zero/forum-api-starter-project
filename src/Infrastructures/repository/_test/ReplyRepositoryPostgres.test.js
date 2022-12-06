@@ -6,6 +6,7 @@ const pool = require('../../database/postgres/pool')
 const ReplyRepositoryPostgres = require('../ReplyRepositoryPostgres')
 const NotFoundError = require('../../../Commons/exceptions/NotFoundError')
 const AuthorizationError = require('../../../Commons/exceptions/AuthorizationError')
+const AddedReply = require('../../../Domains/replies/entities/AddedReply')
 
 describe('ReplyRepositoryPostgrres', () => {
   afterEach(async () => {
@@ -30,7 +31,7 @@ describe('ReplyRepositoryPostgrres', () => {
       await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId })
       await CommentsTableTestHelper.addComment({ id: commentId, owner: userId, threadId })
 
-      const newReply = {
+      const addReply = {
         content: 'content',
         owner: userId,
         commentId
@@ -40,11 +41,16 @@ describe('ReplyRepositoryPostgrres', () => {
       const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, fakeIdGenerator)
 
       // Action
-      const test = await replyRepositoryPostgres.addReply(newReply)
+      const addReply1 = await replyRepositoryPostgres.addReply(addReply)
 
       // Assert
       const replies = await RepliesTableTestHelper.findRepliesById('reply-666')
       expect(replies).toHaveLength(1)
+      expect(addReply1).toStrictEqual(new AddedReply({
+        id: 'reply-666',
+        owner: userId,
+        content: 'content'
+      }))
     })
   })
 
@@ -233,7 +239,7 @@ describe('ReplyRepositoryPostgrres', () => {
         id: reply.id,
         username: user.username,
         date: reply.date,
-        content: '**balasan telah dihapus**',
+        content: 'content',
         is_delete: true
       }
 
@@ -259,7 +265,7 @@ describe('ReplyRepositoryPostgrres', () => {
       const replyId = '-----'
 
       // Action & Assert
-      expect(replyRepositoryPostgres.checkAvailabilityReply(replyId)).rejects.toThrow(NotFoundError)
+      await expect(replyRepositoryPostgres.checkAvailabilityReply(replyId)).rejects.toThrow(NotFoundError)
     })
 
     it('should not throw NotFoundError when reply available', async () => {
@@ -276,7 +282,7 @@ describe('ReplyRepositoryPostgrres', () => {
       await RepliesTableTestHelper.addReply({ id: replyId, commentId, owner: userId })
 
       // Action & Assert
-      expect(replyRepositoryPostgres.checkAvailabilityReply(replyId)).resolves.not.toThrow(NotFoundError)
+      await expect(replyRepositoryPostgres.checkAvailabilityReply(replyId)).resolves.not.toThrow(NotFoundError)
     })
   })
 
@@ -297,7 +303,7 @@ describe('ReplyRepositoryPostgrres', () => {
       await RepliesTableTestHelper.addReply({ id: replyId, threadId, owner: User, commentId })
 
       // Action & Assert
-      expect(replyRepositoryPostgres.verifyReplyAccess({ replyId, owner })).rejects.toThrow(AuthorizationError)
+      await expect(replyRepositoryPostgres.verifyReplyAccess({ replyId, owner })).rejects.toThrow(AuthorizationError)
     })
 
     it('should not throw AuthorizationError when have access ', async () => {
@@ -314,8 +320,7 @@ describe('ReplyRepositoryPostgrres', () => {
       await RepliesTableTestHelper.addReply({ id: replyId, commentId, owner })
 
       // Action & Assert
-      expect(replyRepositoryPostgres.verifyReplyAccess({ replyId, owner }))
-        .resolves.not.toThrow(AuthorizationError)
+      await expect(replyRepositoryPostgres.verifyReplyAccess({ replyId, owner })).resolves.not.toThrow(AuthorizationError)
     })
   })
 

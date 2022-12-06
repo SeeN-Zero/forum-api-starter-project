@@ -16,9 +16,18 @@ class GetDetailThreadUseCase {
     const detailThread = await this._threadRepository.getThreadById(threadId)
     const comments = await this._commentRepository.getCommentsByThreadId(threadId)
     const checkedComments = await Promise.all(comments.map(async (detailComment) => {
+      if (detailComment.is_delete) {
+        detailComment.content = '**komentar telah dihapus**'
+      }
       const comment = new DetailComment(detailComment)
       const replies = await this._replyRepository.getRepliesByCommentId(comment.id)
-      const checkedReplies = replies.map((detailReply) => new DetailReply(detailReply))
+      const checkedReplies = replies.map((detailReply) => {
+        if (detailReply.is_delete) {
+          detailReply.content = '**balasan telah dihapus**'
+        }
+        const reply = new DetailReply(detailReply)
+        return reply
+      })
       return { ...comment, replies: checkedReplies }
     }))
 

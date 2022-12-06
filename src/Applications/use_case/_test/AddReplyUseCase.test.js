@@ -31,7 +31,11 @@ describe('AddReplyUseCase', () => {
     mockingCommentRepository.checkAvailabilityComment = jest.fn()
       .mockImplementation(() => Promise.resolve())
     mockingReplyRepository.addReply = jest.fn()
-      .mockImplementation(() => Promise.resolve(expectedAddedReply))
+      .mockImplementation(() => Promise.resolve({
+        id: 'reply-666',
+        content: 'Content',
+        owner: 'user-666'
+      }))
 
     /** creating use case instance */
     const addReplyUseCase = new AddReplyUseCase({

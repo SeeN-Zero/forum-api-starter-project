@@ -5,7 +5,7 @@ const pool = require('../../database/postgres/pool')
 const CommentRepositoryPostgres = require('../CommentRepositoryPostgres')
 const NotFoundError = require('../../../Commons/exceptions/NotFoundError')
 const AuthorizationError = require('../../../Commons/exceptions/AuthorizationError')
-const DetailComment = require('../../../Domains/comments/entities/DetailComment')
+const AddedComment = require('../../../Domains/comments/entities/AddedComment')
 
 describe('CommentRepositoryPostgres', () => {
   afterEach(async () => {
@@ -21,8 +21,8 @@ describe('CommentRepositoryPostgres', () => {
   describe('addComment function', () => {
     it('should persist and return added comment correctly', async () => {
       // Arrange
-      const threadId = 'thread-123'
-      const userId = 'user-123'
+      const threadId = 'thread-666'
+      const userId = 'user-666'
 
       await UsersTableTestHelper.addUser({ id: userId })
       await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId })
@@ -37,11 +37,16 @@ describe('CommentRepositoryPostgres', () => {
       const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, fakeIdGenerator)
 
       // Action
-      await commentRepositoryPostgres.addComment(newComment)
+      const addComment = await commentRepositoryPostgres.addComment(newComment)
 
       // Assert
       const comments = await CommentsTableTestHelper.findCommentsById('comment-666')
       expect(comments).toHaveLength(1)
+      expect(addComment).toStrictEqual(new AddedComment({
+        id: 'comment-666',
+        owner: userId,
+        content: 'content'
+      }))
     })
   })
 
@@ -52,7 +57,7 @@ describe('CommentRepositoryPostgres', () => {
       const commentId = '---'
 
       // Action & Assert
-      expect(commentRepositoryPostgres.checkAvailabilityComment(commentId)).rejects.toThrow(NotFoundError)
+      await expect(commentRepositoryPostgres.checkAvailabilityComment(commentId)).rejects.toThrow(NotFoundError)
     })
 
     it('should not throw NotFoundError when comment available', async () => {
@@ -67,7 +72,7 @@ describe('CommentRepositoryPostgres', () => {
       await CommentsTableTestHelper.addComment({ id: commentId, threadId, owner: userId })
 
       // Action & Assert
-      expect(commentRepositoryPostgres.checkAvailabilityComment(commentId)).resolves.not.toThrow(NotFoundError)
+      await expect(commentRepositoryPostgres.checkAvailabilityComment(commentId)).resolves.not.toThrow(NotFoundError)
     })
   })
 
@@ -86,7 +91,10 @@ describe('CommentRepositoryPostgres', () => {
       await CommentsTableTestHelper.addComment({ id: commentId, threadId, owner: user })
 
       // Action & Assert
-      expect(commentRepositoryPostgres.verifyCommentAccess({ commentId, owner })).rejects.toThrow(AuthorizationError)
+      await expect(commentRepositoryPostgres.verifyCommentAccess({
+        commentId,
+        owner
+      })).rejects.toThrow(AuthorizationError)
     })
 
     it('should not throw AuthorizationError when owner have access to the comment', async () => {
@@ -103,7 +111,10 @@ describe('CommentRepositoryPostgres', () => {
       await CommentsTableTestHelper.addComment({ id: commentId, threadId, owner })
 
       // Action & Assert
-      expect(commentRepositoryPostgres.verifyCommentAccess({ commentId, owner })).resolves.not.toThrow(AuthorizationError)
+      await expect(commentRepositoryPostgres.verifyCommentAccess({
+        commentId,
+        owner
+      })).resolves.not.toThrow(AuthorizationError)
     })
   })
 
@@ -240,7 +251,7 @@ describe('CommentRepositoryPostgres', () => {
         id: 'comment-666',
         username: user.username,
         date: now,
-        content: '**komentar telah dihapus**',
+        content: 'content',
         is_delete: true
       }
 

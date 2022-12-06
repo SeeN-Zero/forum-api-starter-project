@@ -38,14 +38,7 @@ class ReplyRepositoryPostgres extends ReplyRepository {
       return []
     }
 
-    const chekedReplies = result.rows.map((row) => {
-      if (row.is_delete) {
-        row.content = '**balasan telah dihapus**'
-      }
-      return row
-    })
-
-    return chekedReplies
+    return result.rows
   }
 
   async deleteReply (replyId) {

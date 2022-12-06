@@ -5,6 +5,7 @@ const DetailThread = require('../../../Domains/threads/entities/DetailThread')
 const AddThread = require('../../../Domains/threads/entities/AddThread')
 const pool = require('../../database/postgres/pool')
 const ThreadRepositoryPostgres = require('../ThreadRepositoryPostgres')
+const AddedThread = require('../../../Domains/threads/entities/AddedThread')
 
 describe('ThreadRepositoryPostgres', () => {
   afterEach(async () => {
@@ -32,11 +33,16 @@ describe('ThreadRepositoryPostgres', () => {
       const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, fakeIdGenerator)
 
       // Action
-      await threadRepositoryPostgres.addThread(addThread)
+      const addThread1 = await threadRepositoryPostgres.addThread(addThread)
 
       // Assert
       const threads = await ThreadsTableTestHelper.findThreadsById('thread-666')
       expect(threads).toHaveLength(1)
+      expect(addThread1).toStrictEqual(new AddedThread({
+        id: 'thread-666',
+        title: 'title',
+        owner: user[0].id
+      }))
     })
   })
 

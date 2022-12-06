@@ -37,15 +37,7 @@ class CommentRepositoryPostgres extends CommentRepository {
       return []
     }
 
-    const chekedComments = result.rows.map((row) => {
-      if (row.is_delete) {
-        row.content = '**komentar telah dihapus**'
-      }
-      return row
-    }
-    )
-
-    return chekedComments
+    return result.rows
   }
 
   async deleteComment (commentId) {
