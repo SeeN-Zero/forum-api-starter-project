@@ -60,7 +60,8 @@ describe('GetDetailThreadUseCase', () => {
             id: 'comment-666',
             username: 'username',
             date: 'date',
-            content: 'content'
+            content: 'content',
+            is_delete: false
           }
         ]
       ))
@@ -71,7 +72,8 @@ describe('GetDetailThreadUseCase', () => {
             id: 'reply-666',
             content: 'content',
             date: 'date',
-            username: 'username'
+            username: 'username',
+            is_delete: false
           }
         ]
       ))
